@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Vinyl Player - Authorization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: white;
+      text-align: center;
+      padding: 35px 15px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #222;
+      padding: 25px;
+      border-radius: 15px;
+    }
+    h1 { color: #1DB954; }
+    .value {
+      background: #333;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-wrap: anywhere;
+      margin: 12px 0;
+      user-select: all;
+    }
+    button {
+      background: #1DB954;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .note {
+      color: #bbb;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    #result { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Spotify Vinyl Player</h1>
+    <h2>Authorization Callback</h2>
+
+    <div id="result">
+      Waiting for Spotify authorization...
+    </div>
+
+    <p class="note">
+      This page only displays the authorization result.
+      It does not store or transmit your Spotify tokens.
+    </p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+
+    const code = params.get("code");
+    const state = params.get("state");
+    const error = params.get("error");
+
+    // Remove sensitive callback parameters from browser history.
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+
+    const result = document.getElementById("result");
+
+    function addText(tag, value, parent) {
+      const element = document.createElement(tag);
+      element.textContent = value;
+      parent.appendChild(element);
+      return element;
+    }
+
+    function addCopyButton(value, parent, label) {
+      const button = document.createElement("button");
+      button.textContent = label;
+
+      button.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          button.textContent = "Copied!";
+        } catch {
+          button.textContent = "Copy unavailable";
+        }
+      };
+
+      parent.appendChild(button);
+    }
+
+    if (error) {
+      addText("h3", "Authorization failed", result);
+      addText("p", error, result);
+
+    } else if (code && state) {
+      addText("h3", "Authorization received!", result);
+
+      addText("p", "Authorization Code:", result);
+      addText("div", code, result).className = "value";
+      addCopyButton(code, result, "Copy Authorization Code");
+
+      addText("p", "Security State:", result);
+      addText("div", state, result).className = "value";
+      addCopyButton(state, result, "Copy State");
+
+      addText("p",
+        "Transfer both values to your ESP32 setup page.",
+        result
+      );
+
+    } else {
+      addText("h3", "Waiting for Spotify", result);
+      addText("p",
+        "No authorization code received yet.",
+        result
+      );
+    }
+  </script>
+</body>
+</html>
